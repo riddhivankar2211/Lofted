@@ -73,7 +73,7 @@ export default async function MessagingPage({
         ])
         const { data: otherProfile } = await supabase
           .from('profiles').select('*').eq('id', withUserId).single()
-        activeConversation = { ...newConv, other_participant: otherProfile as Profile }
+        activeConversation = { ...newConv, other_participant: otherProfile as Profile } as Conversation
         conversations = [activeConversation, ...conversations]
       }
     }
