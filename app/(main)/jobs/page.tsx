@@ -20,9 +20,9 @@ export default async function JobsPage() {
 
   const appliedJobIds = new Set((myApplications ?? []).map((a: { job_id: string }) => a.job_id))
 
-  const jobs: Job[] = (jobsRaw ?? []).map((j: Record<string, unknown>) => ({
-    ...j,
-    applied: appliedJobIds.has(j.id as string),
+  const jobs: Job[] = (jobsRaw ?? []).map((j) => ({
+    ...(j as unknown as Job),
+    applied: appliedJobIds.has((j as Record<string, unknown>).id as string),
   }))
 
   return <JobsClient jobs={jobs} currentUserId={user.id} />
