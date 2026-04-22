@@ -1,0 +1,44 @@
+import { createClient } from '@/lib/supabase/server'
+import FeedClient from './FeedClient'
+import type { Profile, Post } from '@/types'
+
+export default async function FeedPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const [{ data: profile }, { data: postsRaw }, { data: suggestions }] = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', user.id).single(),
+
+    supabase
+      .from('posts')
+      .select('*, author:profiles(*), post_likes(user_id), comments(count)')
+      .order('created_at', { ascending: false })
+      .limit(30),
+
+    supabase
+      .from('profiles')
+      .select('*')
+      .neq('id', user.id)
+      .limit(5),
+  ])
+
+  const posts: Post[] = (postsRaw ?? []).map((p: Record<string, unknown>) => ({
+    ...p,
+    likes_count: Array.isArray(p.post_likes) ? (p.post_likes as unknown[]).length : 0,
+    liked_by_user: Array.isArray(p.post_likes)
+      ? (p.post_likes as { user_id: string }[]).some((l) => l.user_id === user.id)
+      : false,
+    comments_count: Array.isArray(p.comments) && p.comments.length > 0
+      ? (p.comments[0] as { count: number }).count
+      : 0,
+  }))
+
+  return (
+    <FeedClient
+      currentProfile={profile as Profile}
+      initialPosts={posts}
+      suggestions={(suggestions as Profile[]) ?? []}
+    />
+  )
+}
