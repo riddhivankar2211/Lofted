@@ -23,16 +23,19 @@ export default async function FeedPage() {
       .limit(5),
   ])
 
-  const posts: Post[] = (postsRaw ?? []).map((p: Record<string, unknown>) => ({
-    ...p,
-    likes_count: Array.isArray(p.post_likes) ? (p.post_likes as unknown[]).length : 0,
-    liked_by_user: Array.isArray(p.post_likes)
-      ? (p.post_likes as { user_id: string }[]).some((l) => l.user_id === user.id)
-      : false,
-    comments_count: Array.isArray(p.comments) && p.comments.length > 0
-      ? (p.comments[0] as { count: number }).count
-      : 0,
-  }))
+  const posts: Post[] = (postsRaw ?? []).map((p) => {
+    const post = p as Record<string, unknown>
+    return {
+      ...(post as unknown as Post),
+      likes_count: Array.isArray(post.post_likes) ? (post.post_likes as unknown[]).length : 0,
+      liked_by_user: Array.isArray(post.post_likes)
+        ? (post.post_likes as { user_id: string }[]).some((l) => l.user_id === user.id)
+        : false,
+      comments_count: Array.isArray(post.comments) && post.comments.length > 0
+        ? (post.comments[0] as { count: number }).count
+        : 0,
+    }
+  })
 
   return (
     <FeedClient
